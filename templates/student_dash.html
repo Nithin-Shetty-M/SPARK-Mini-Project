@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Custom hover logic for the slide-in effect */
+        .sidebar-container:hover .slide-panel {
+            transform: translateX(0);
+        }
+        .main-content {
+            margin-left: 64px; /* Space for the mini-sidebar */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="sidebar-container fixed inset-y-0 left-0 z-50 flex">
+        <div class="w-16 bg-indigo-900 flex flex-col items-center py-6 space-y-8 text-white z-20">
+            <i class="fas fa-chart-pie text-2xl"></i>
+            <i class="fas fa-users text-xl opacity-70 hover:opacity-100 cursor-pointer"></i>
+            <i class="fas fa-box text-xl opacity-70 hover:opacity-100 cursor-pointer"></i>
+            <i class="fas fa-cog text-xl opacity-70 hover:opacity-100 cursor-pointer"></i>
+        </div>
+
+        <div class="slide-panel w-48 bg-white shadow-xl h-full transform -translate-x-full transition-transform duration-300 ease-in-out border-r z-10 p-4 pt-6">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Menu</h2>
+            <ul class="space-y-4 text-gray-600 font-medium">
+                <li class="hover:text-indigo-600 cursor-pointer">Departments</li>
+                <li class="hover:text-indigo-600 cursor-pointer">User List</li>
+                <li class="hover:text-indigo-600 cursor-pointer">Inventory</li>
+                <li class="hover:text-indigo-600 cursor-pointer">Settings</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content min-h-screen flex flex-col">
+        
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8">
+            <h1 class="text-xl font-bold text-gray-800">Student Dashboard</h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500">Welcome, Admin</span>
+                <div class="w-8 h-8 bg-indigo-500 rounded-full"></div>
+            </div>
+        </header>
+
+        <main class="p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" placeholder="Search records..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none">
+                </div>
+                
+                <div class="flex gap-2">
+                    <select class="px-4 py-2 border rounded-lg bg-white text-gray-600 outline-none">
+                        <option disabled hidden selected>Filter</option>
+                        <option>Active</option>
+                        <option>Pending</option>
+                    </select>
+                    <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        Apply
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Name</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Role</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
+                            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-gray-800">John Doe</td>
+                            <td class="px-6 py-4 text-gray-500">Developer</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Active</span>
+                            </td>
+                            <td class="px-6 py-4 text-indigo-600 hover:underline cursor-pointer">Edit</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-gray-800">Jane Smith</td>
+                            <td class="px-6 py-4 text-gray-500">Designer</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Pending</span>
+                            </td>
+                            <td class="px-6 py-4 text-indigo-600 hover:underline cursor-pointer">Edit</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
