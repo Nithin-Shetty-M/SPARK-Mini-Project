@@ -38,10 +38,10 @@ class Project(db.Model):
 
 class Student(db.Model):
     roll_no = db.Column(db.String(50), primary_key=True)
+    academic_year= db.Column(db.String(10), primary_key=True)
     name = db.Column(db.String(100))
     course = db.Column(db.String(20))
-    section= db.column(db.String(5))
-    academic_year= db.column(db.String(10))
+    section= db.Column(db.String(5))
     project_id = db.Column(db.String(50), db.ForeignKey('project.id'))
 
 
