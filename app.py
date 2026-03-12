@@ -40,8 +40,8 @@ class Student(db.Model):
     roll_no = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(100))
     course = db.Column(db.String(20))
-    section= db.column(db.string(5))
-    academic_year= db.column(db.string(10))
+    section= db.column(db.String(5))
+    academic_year= db.column(db.String(10))
     project_id = db.Column(db.String(50), db.ForeignKey('project.id'))
 
 
@@ -58,6 +58,33 @@ class Student_login(db.Model):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+# Basic Login Router
+@app.route('/login/<role>', methods=['GET', 'POST'])
+def login(role):
+    if request.method == 'POST':
+        email = request.form.get('email')
+        pw = request.form.get('password')
+        
+        if role == 'admin' and email == 'admin@gmail.com' and pw == 'admin123':
+            session['role'] = 'admin'
+            return redirect('/admin/dashboard')
+        
+        elif role == 'guide':
+            g = Guide.query.filter_by(email=email, password=pw).first()
+            if g:
+                session['role'] = 'guide'
+                session['user_id'] = g.id
+                return redirect('/guide/dashboard')
+        
+        elif role == 'student':
+            s = Student.query.filter_by(email=email, password=pw).first()
+            if s:
+                session['role'] = 'student'
+                return redirect('/student/dashboard')
+        
+        return "Invalid Credentials"
+    return render_template('login.html',role=role)
 
 
 
