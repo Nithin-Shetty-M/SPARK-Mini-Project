@@ -1,2 +1,2 @@
 # SPARK-Mini-Project
-Student Project Archive and Research Knowledge
+Student Project Access for Research Knowledge

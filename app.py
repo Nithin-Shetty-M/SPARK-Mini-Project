@@ -13,7 +13,7 @@ db = SQLAlchemy(app)
 # --- Database Models ---
 
 class Guide(db.Model):
-    id = db.Column(db.String(50), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
@@ -66,18 +66,18 @@ def login(role):
         email = request.form.get('email')
         pw = request.form.get('password')
         
-        if role == 'admin' and email == 'admin@gmail.com' and pw == 'admin123':
+        if role == 'Admin' and email == 'admin@gmail.com' and pw == 'admin123':
             session['role'] = 'admin'
             return redirect('/admin/dashboard')
         
-        elif role == 'guide':
+        elif role == 'Guide':
             g = Guide.query.filter_by(email=email, password=pw).first()
             if g:
                 session['role'] = 'guide'
                 session['user_id'] = g.id
                 return redirect('/guide/dashboard')
         
-        elif role == 'student':
+        elif role == 'Student':
             s = Student.query.filter_by(email=email, password=pw).first()
             if s:
                 session['role'] = 'student'
@@ -86,7 +86,25 @@ def login(role):
         return "Invalid Credentials"
     return render_template('login.html',role=role)
 
+# --- Admin Functions ---
 
+@app.route('/admin/dashboard')
+def admin_dash():
+    guides = Guide.query.all()
+    projects = Project.query.all()
+    return render_template('admin.html', guides=guides, projects=projects)
+
+@app.route('/admin/add_guide')
+def add_guide():
+    return render_template('new_guide.html')
+
+@app.route('/admin/new_guide', methods=['POST'])
+def new_guide():
+    new_g = Guide(name=request.form['name'], email=request.form['email'], 
+                  password=request.form['password'], department=request.form['dept'])
+    db.session.add(new_g)
+    db.session.commit()
+    return redirect('/admin/dashboard')
 
 # Main loop
 if __name__ == '__main__':
