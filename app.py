@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import pandas as pd
+import uuid
 
 app = Flask(__name__)
 app.secret_key = "college_secret_key"
@@ -29,8 +30,8 @@ class Project(db.Model):
     stored_name = db.Column(db.String(200))
     submission_date = db.Column(db.DateTime, default=datetime.utcnow)
     # student_reg_nos = db.Column(db.Text)
-    course = db.Column(db.String(50))
-    academic_year = db.Column(db.String(10))
+    # course = db.Column(db.String(50))
+    # academic_year = db.Column(db.String(10))
     batch = db.Column(db.String(20))
     status = db.Column(db.String(20), default='Pending')
     rejection_reason = db.Column(db.Text, nullable=True)
@@ -118,7 +119,7 @@ def new_guide():
     return redirect('/admin/dashboard')
 
 @app.route('/admin/new_students', methods=['POST'])
-def upload_file():
+def upload_csv_file():
     file = request.files.get('file')
     if not file or file.filename == '':
         return "No file selected", 400
@@ -143,6 +144,35 @@ def upload_file():
     except Exception as e:
         # pandas + sqlalchemy usually raises IntegrityError if PKs conflict
         return f"An error occurred: {str(e)}", 500
+
+#--- Guide functions
+@app.route('/guide/dashboard')
+def guide_dash():
+    return render_template("guide.html")
+
+@app.route('/guide/new_project')
+def new_project():
+    return render_template("new_project.html")
+
+@app.route('/guide/new_project/add', methods=['POST'])
+def upload_file():
+    file = request.files.get('file')
+    if file and file.filename != '':
+        original_name = file.filename
+        # Generate unique filename using UUID
+        extension = os.path.splitext(original_name)[1]
+        unique_name = f"{uuid.uuid4()}{extension}"
+        
+        # Save physical file
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+        file.save(filepath)
+        
+        # Save record to DB via ORM
+        new_file = Project(name=original_name, stored_name=unique_name)
+        db.session.add(new_file)
+        db.session.commit()
+        
+    return redirect(url_for('index'))
 
 # --- Student Functions ---
 
