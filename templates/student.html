@@ -32,6 +32,16 @@
             <th>Date</th>
             <th>View/Download</th>
         </tr>
+        {%for p in projects %}
+        <tr>
+            <td>{{p.id}}</td>
+            <td>{{p.name}}</td>
+            <td>{{p.guide.name}}</td>
+            <td>{{p.guide.department}}</td>
+            <td>{{p.submission_date}}</td>
+            <td><a href="/download/{{p.stored_name}}">Download</a></td>
+        </tr>
+        {% endfor %}
     </table>
 </div>
 <div>

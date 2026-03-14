@@ -223,7 +223,10 @@ def student_dash():
     if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
     
     return render_template('student.html', projects=query)
-    
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename) 
 
 # Main loop
 if __name__ == '__main__':
