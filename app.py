@@ -148,14 +148,18 @@ def upload_csv_file():
 #--- Guide functions
 @app.route('/guide/dashboard')
 def guide_dash():
-    return render_template("guide.html")
+    g=session['user_id']
+    return render_template("guide.html",g=g)
 
-@app.route('/guide/new_project')
-def new_project():
-    return render_template("new_project.html")
+@app.route('/guide/new_project/<g>')
+def new_project(g):
+    return render_template("new_project.html",g=g)
 
-@app.route('/guide/new_project/add', methods=['POST'])
-def upload_file():
+@app.route('/guide/new_project/add/<G>', methods=['POST'])
+def upload_file(G):
+    g=Guide.query.filter_by(id=G).first()
+    name=request.form['name']
+    batch=request.form['batch']
     file = request.files.get('file')
     if file and file.filename != '':
         original_name = file.filename
@@ -168,11 +172,44 @@ def upload_file():
         file.save(filepath)
         
         # Save record to DB via ORM
-        new_file = Project(name=original_name, stored_name=unique_name)
+        new_file = Project(name=name, stored_name=unique_name, batch=batch, guide_id=g.id)
         db.session.add(new_file)
-        db.session.commit()
+        db.session.flush()
+    #     db.session.commit()
         
-    return redirect(url_for('index'))
+    # return redirect(url_for('index'))
+        p = Project.query.filter_by(stored_name=unique_name, guide_id=g.id).first()
+        student_count = 0
+        for i in range(1, 8):
+            roll = request.form.get(f'roll_no_{i}')
+            name = request.form.get(f'name_{i}')
+            section = request.form.get(f'section_{i}')
+            academic_year=request.form.get('academic_year')
+            course=request.form.get(f'course_{i}')
+
+            # Only create an entry if Roll Number is provided
+            if roll and roll.strip():
+                new_student = Student(
+                    roll_no=roll,
+                    academic_year=academic_year,
+                    name=name,
+                    course=course,
+                    section=section,
+                    project_id=p.id  # Link to the project we just created
+                )
+                db.session.add(new_student)
+                student_count += 1
+
+        # 4. Final Validation & Commit
+        if student_count < 3:
+            db.session.rollback()
+            return "Error: You must provide at least 3 students."
+
+        db.session.commit()
+        return redirect('/guide/dashboard')
+
+    return "File missing", 400
+
 
 # --- Student Functions ---
 
