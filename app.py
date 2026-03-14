@@ -2,10 +2,12 @@ from flask import Flask, render_template, request, redirect, session, send_from_
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+import pandas as pd
 
 app = Flask(__name__)
 app.secret_key = "college_secret_key"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for bulk students upload
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db = SQLAlchemy(app)
@@ -46,12 +48,16 @@ class Student(db.Model):
 
 
 class Student_login(db.Model):
+    __tablename__ = 'Student_login'
     roll_no = db.Column(db.String(50), primary_key=True)
     name = db.Column(db.String(100))
     course = db.Column(db.String(100))
     email = db.Column(db.String(100))
     password = db.Column(db.String(100))
     batch = db.Column(db.String(20))
+
+    def __repr__(self):
+        return f'<Student {self.roll_no}: {self.name}>'
 
 # --- Routes ---
 
@@ -78,7 +84,7 @@ def login(role):
                 return redirect('/guide/dashboard')
         
         elif role == 'Student':
-            s = Student.query.filter_by(email=email, password=pw).first()
+            s = Student_login.query.filter_by(email=email, password=pw).first()
             if s:
                 session['role'] = 'student'
                 return redirect('/student/dashboard')
@@ -98,6 +104,10 @@ def admin_dash():
 def add_guide():
     return render_template('new_guide.html')
 
+@app.route('/admin/add_students')
+def add_students():
+    return render_template('bulk_students.html')
+
 @app.route('/admin/new_guide', methods=['POST'])
 def new_guide():
     new_g = Guide(name=request.form['name'], email=request.form['email'], 
@@ -105,6 +115,47 @@ def new_guide():
     db.session.add(new_g)
     db.session.commit()
     return redirect('/admin/dashboard')
+
+@app.route('/admin/new_students', methods=['POST'])
+def upload_file():
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        return "No file selected", 400
+
+    try:
+        # 1. Read the CSV into a DataFrame
+        df = pd.read_csv(file)
+
+        # 2. Use SQLAlchemy engine to write the data
+        # 'if_exists=append' works seamlessly with SQLAlchemy objects
+        df.to_sql(
+            'Student_login', 
+            con=db.engine, 
+            if_exists='append', 
+            index=False
+        )
+
+        return redirect('/admin/dashboard')
+        
+        # return f"Successfully inserted {len(df)} rows using SQLAlchemy."
+
+    except Exception as e:
+        # pandas + sqlalchemy usually raises IntegrityError if PKs conflict
+        return f"An error occurred: {str(e)}", 500
+
+# --- Student Functions ---
+
+@app.route('/student/dashboard')
+def student_dash():
+    search = request.args.get('search')
+    dept = request.args.get('dept')
+    query = Project.query.all()
+    
+    if search: query = query.filter(Project.name.contains(search))
+    if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
+    
+    return render_template('student.html', projects=query)
+    
 
 # Main loop
 if __name__ == '__main__':

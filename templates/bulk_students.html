@@ -8,7 +8,7 @@
 <body>
     <div>
         <h3>Add New Students list using csv file</h3>
-    <form action="">
+    <form action="/admin/new_students" method="post" enctype="multipart/form-data">
         <table border="2">
             <h4>FORMAT</h4>
             <tr>
@@ -21,8 +21,8 @@
 
             </tr>
         </table>
-        <input type="file" name="file" id="">
-        <input type="button" value="Add Students">
+        <input type="file" name="file" id="" accept=".csv">
+        <input type="submit" value="Add Students">
     </form>
     </div>
 </body>
