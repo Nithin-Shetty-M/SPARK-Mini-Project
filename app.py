@@ -98,7 +98,8 @@ def login(role):
 def admin_dash():
     guides = Guide.query.all()
     projects = Project.query.all()
-    return render_template('admin.html', guides=guides, projects=projects)
+    students= Student_login.query.all()
+    return render_template('admin.html', guides=guides, projects=projects,students=students)
 
 @app.route('/admin/add_guide')
 def add_guide():

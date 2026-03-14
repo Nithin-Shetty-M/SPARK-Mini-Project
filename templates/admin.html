@@ -53,9 +53,20 @@
             <th>Guide Name</th>
             <th>Guide E-mail</th>
             <th>Password</th>
-            <th>Total Guided Projects</th>
+            <th>Department</th>
             <th>Status</th>
+            <th>Action</th>
         </tr>
+         {% for g in guides %}
+        <tr>
+            <td>{{ g.id }}</td><td>{{ g.name }}</td>
+            <td>{{ g.email }}</td>
+            <td>{{ g.password }}</td>
+            <td>{{ g.department }}</td>
+            <td>{{ "Active" if g.is_active else "Inactive" }}</td>
+            <td><a href="/admin/toggle_guide/{{ g.id }}">Toggle Status</a></td>
+        </tr>
+        {% endfor %}
     </table>
 </div>
 <div>
@@ -75,6 +86,16 @@
             <th>Batch</th>
             <th>Password</th>
         </tr>
+        {% for s in students %}
+        <tr>
+            <td>{{s.roll_no}}</td>
+            <td>{{s.name}}</td>
+            <td>{{s.email}}</td>
+            <td>{{s.course}}</td>
+            <td>{{s.batch}}</td>
+            <td>{{s.password}}</td>
+        </tr>
+        {% endfor %}
     </table>
 </div>
 </body>
