@@ -149,7 +149,7 @@ def upload_csv_file():
 @app.route('/guide/dashboard')
 def guide_dash():
     g=session['user_id']
-    return render_template("guide.html",g=g)
+    return render_template("guide.html",g=g, guide=Guide.query.get(g))
 
 @app.route('/guide/new_project/<g>')
 def new_project(g):
@@ -215,14 +215,15 @@ def upload_file(G):
 
 @app.route('/student/dashboard')
 def student_dash():
-    search = request.args.get('search')
-    dept = request.args.get('dept')
-    query = Project.query.all()
+    guides=Guide.query.all()
+    search = request.args.get('psearch')
+    dept = request.args.get('pdept')
+    query = Project.query
     
     if search: query = query.filter(Project.name.contains(search))
     if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
     
-    return render_template('student.html', projects=query)
+    return render_template('student.html', projects=query.all(),guides=guides)
 
 @app.route('/download/<filename>')
 def download_file(filename):

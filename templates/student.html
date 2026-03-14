@@ -15,9 +15,9 @@
     <input type="button" value="All Projects">
     <input type="button" value="All Guides">
 </div>
-<div>
+<div><form action="/student/dashboard">
     <input type="text" name="psearch">
-    <input type="button" value="Search">
+    <input type="submit" value="Search">
     <label for=""> &nbsp; Filter By Department</label>
     <select name="pdept" id="">
         <option value="All" id="pname">All</option>
@@ -43,6 +43,7 @@
         </tr>
         {% endfor %}
     </table>
+    </form>
 </div>
 <div>
     <input type="text" name="gsearch">
@@ -79,6 +80,13 @@
             <th>Status</th>
             <th>Total Projects</th>
         </tr>
+        {% for guide in guides %}
+        <td>{{guide.id}}</td>
+        <td>{{guide.name}}</td>
+        <td>{{guide.department}}</td>
+        <td>{{ "Active" if guide.is_active else "Inactive" }}</td>
+        <td>{{guide.projects|length}}</td>
+        {% endfor %}
     </table>
 </div>
 </body>

@@ -28,6 +28,12 @@
             <th>Date</th>
             <th>Remove Project</th>
         </tr>
+        {% for p in guide.projects %}
+        <td>{{p.id}}</td>
+        <td>{{p.name}}</td>
+        <td>{{p.submission_date}}</td>
+        <td><a href=""></a>Remove</td>
+        {% endfor %}
     </table>
     </div>
 </body>
