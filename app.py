@@ -88,6 +88,7 @@ def login(role):
             s = Student_login.query.filter_by(email=email, password=pw).first()
             if s:
                 session['role'] = 'student'
+                session['student_rono']=s.roll_no
                 return redirect('/student/dashboard')
         
         return "Invalid Credentials"
@@ -244,6 +245,8 @@ def delete_project(pid):
 
 @app.route('/student/dashboard')
 def student_dash():
+    s=session['student_rono']
+    student=Student_login.query.get(s)
     guides=Guide.query.all()
     search = request.args.get('psearch')
     dept = request.args.get('pdept')
@@ -252,7 +255,7 @@ def student_dash():
     if search: query = query.filter(Project.name.contains(search))
     if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
     
-    return render_template('student.html', projects=query.all(),guides=guides)
+    return render_template('student.html', projects=query.all(),guides=guides,student=student)
 
 @app.route('/download/<filename>')
 def download_file(filename):

@@ -8,11 +8,11 @@
 <body>
     <h3>Role: Guide</h3>
     <div>
-        <h2>M Nithin Shetty</h2>
-        <h5>Department of </h5>
+        <h2>{{guide.name}}</h2>
+        <h5>Department of {{guide.department}} </h5>
     </div>
     <div>
-    <h3>Status:Active</h3>
+    <h3>Status:{{ "Active" if guide.is_active else "Inactive" }}</h3>
     <input type="button" value="+ Upload New Project" onclick="window.location.href='/guide/new_project/{{g}}';">
     <!-- <input type="button" value="+ Upload New Student Details" onclick="window.location.href='bulk_students.html'"> -->
     </div>
