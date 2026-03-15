@@ -27,12 +27,14 @@
             <th>Project Name</th>
             <!-- <th>Guide Name</th> -->
             <!-- <th>Department</th> -->
+             <th>No of Students</th>
             <th>Date</th>
             <th>Remove Project</th>
         </tr>
         {% for p in guide.projects %}
         <td>{{p.id}}</td>
         <td>{{p.name}}</td>
+        <td>{{p.students|length}}</td>
         <td>{{p.submission_date}}</td>
         <td><a href="/delete_project/{{p.id}}" onclick="return confirm('Are you sure? This will delete the project, the file, and all registered students!');">Remove</a></td>
         {% endfor %}

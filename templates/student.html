@@ -29,6 +29,7 @@
             <th>Project ID</th>
             <th>Project Name</th>
             <th>Guide Name</th>
+            <th>No of Students</th>
             <th>Department</th>
             <th>Date</th>
             <th>View/Download</th>
@@ -38,6 +39,7 @@
             <td>{{p.id}}</td>
             <td>{{p.name}}</td>
             <td>{{p.guide.name}}</td>
+            <td>{{p.students|length}}</td>
             <td>{{p.guide.department}}</td>
             <td>{{p.submission_date}}</td>
             <td><a href="/download/{{p.stored_name}}">Download</a></td>
