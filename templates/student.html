@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
+    <button onclick="window.location.href='/';">Home</button>
 </head>
 <body>
     <h1>Role:Student</h1>
@@ -81,11 +82,13 @@
             <th>Total Projects</th>
         </tr>
         {% for guide in guides %}
+        <tr></tr>
         <td>{{guide.id}}</td>
         <td>{{guide.name}}</td>
         <td>{{guide.department}}</td>
         <td>{{ "Active" if guide.is_active else "Inactive" }}</td>
         <td>{{guide.projects|length}}</td>
+        </tr>
         {% endfor %}
     </table>
 </div>
