@@ -146,6 +146,13 @@ def upload_csv_file():
         # pandas + sqlalchemy usually raises IntegrityError if PKs conflict
         return f"An error occurred: {str(e)}", 500
 
+@app.route('/admin/toggle_guide/<id>')
+def toggle_guide(id):
+    g = Guide.query.get(id)
+    g.is_active = not g.is_active
+    db.session.commit()
+    return redirect('/admin/dashboard')
+
 #--- Guide functions
 @app.route('/guide/dashboard')
 def guide_dash():
