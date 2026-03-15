@@ -32,7 +32,7 @@
         <td>{{p.id}}</td>
         <td>{{p.name}}</td>
         <td>{{p.submission_date}}</td>
-        <td><a href=""></a>Remove</td>
+        <td><a href="/delete_project/{{p.id}}" onclick="return confirm('Are you sure? This will delete the project, the file, and all registered students!');">Remove</a></td>
         {% endfor %}
     </table>
     </div>

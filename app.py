@@ -210,6 +210,35 @@ def upload_file(G):
 
     return "File missing", 400
 
+@app.route('/delete_project/<int:pid>')
+def delete_project(pid):
+    # 1. Fetch the project record
+    project = Project.query.get_or_404(pid)
+    
+    try:
+        # 2. REMOVE STUDENTS FIRST
+        # This deletes all students associated with this project_id
+        Student.query.filter_by(project_id=pid).delete()
+        
+        # 3. REMOVE THE PHYSICAL FILE
+        if project.stored_name:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.stored_name)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        
+        # 4. REMOVE THE PROJECT RECORD
+        db.session.delete(project)
+        
+        # Commit all changes (Students + Project) as one transaction
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        return f"An error occurred: {str(e)}", 500
+        
+    return redirect("/guide/dashboard")
+
+
 
 # --- Student Functions ---
 
