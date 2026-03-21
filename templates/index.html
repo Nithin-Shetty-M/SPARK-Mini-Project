@@ -1,100 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPARK-Home</title>
-    <style>
-      .count-cards{
-        padding: 15px 10%;
-        /* text-align: center; */
-        /* align-items: center; */
-        /* align-content: center; */
-      }
-    </style>
-</head>
-<body>
- <header>
-    <div class="logo">
-      <div class="logo-circle">S</div>
-      <span>SPARK</span>
+{% extends "base.html" %}
+
+{% block title %}Welcome to SPARK{% endblock %}
+
+{% block content %}
+<div class="card hero-section" style="background: linear-gradient(135deg, var(--sidebar-color) 0%, #2d3748 100%); color: white; padding: 40px; margin-bottom: 30px;">
+    <h1 style="margin-top: 0; color: #63b3ed;">Student Project Access for Research and Knowledge</h1>
+    <p style="font-size: 1.1rem; max-width: 800px; line-height: 1.6; color: #cbd5e0;">
+        SPARK represents the idea that previous student research acts as a spark to ignite new innovation among current students. Explore, mentor, and manage academic excellence.
+    </p>
+</div>
+
+<h3 style="margin-bottom: 20px;">Access Portals</h3>
+<div class="grid" style="margin-bottom: 40px;">
+    <a href="/login/Student" class="card login-tile" style="text-decoration: none; color: inherit; transition: 0.3s;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">🎓</div>
+        <h4 style="margin: 0; color: var(--primary-blue);">Student Login</h4>
+        <p style="font-size: 0.9rem; color: #718096;">Access Specific Projects & Research</p>
+    </a>
+
+    <a href="/login/Guide" class="card login-tile" style="text-decoration: none; color: inherit; transition: 0.3s;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">👨‍🏫</div>
+        <h4 style="margin: 0; color: var(--primary-blue);">Guide Login</h4>
+        <p style="font-size: 0.9rem; color: #718096;">Mentor and Review Student Work</p>
+    </a>
+
+    <a href="/login/Admin" class="card login-tile" style="text-decoration: none; color: inherit; transition: 0.3s;">
+        <div style="font-size: 2rem; margin-bottom: 10px;">🛡️</div>
+        <h4 style="margin: 0; color: var(--primary-blue);">Admin Login</h4>
+        <p style="font-size: 0.9rem; color: #718096;">Manage the Platform & Users</p>
+    </a>
+</div>
+
+<div class="card" style="background-color: var(--primary-blue); color: white; display: flex; justify-content: space-around; text-align: center; padding: 20px; margin-bottom: 40px;">
+    <div class="count-item">
+        <div style="font-size: 1.5rem; font-weight: bold;">Projects</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">{{ projects|length }}</div>
+        <small>Repository</small>
     </div>
-    <nav>
-      <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Login</a></li>
-        <li><a href="#">Support</a></li>
-      </ul>
-    </nav>
-  </header>
-  <h1>Student Project Access for Research and Knowledge</h1>
-  <p>SPARK represents the idea that previous student research acts as a spark to ignite new innovation among current students.</p>
-  <div class="log-buttons">
-    <a href="/login/Student">
-    <h4>Student Login</h4>
-    <h5>Access Specific Projects</h5>
-    </a>    
-  </div>
- <div class="log-buttons">
-    <a href="/login/Guide">
-    <h4>Guide Login</h4>
-    <h5>Mentor and Review Work</h5>
-    </a>    
-  </div>
-  <div class="log-buttons">
-    <a href="/login/Admin">
-    <h4>Admin Login</h4>
-    <h5>Manage the Platform</h5>
-    </a>    
-  </div>
-  <div style="display: flex;flex-wrap: wrap; padding: 20px;background-color: blue;;">
-    <!-- <table style="background-color: blue;border-radius: 10px;width: 100%;height: 50px;text-align: center;">
-      <tr>
-        <td>Projects</td>
-        <td>Guides</td>
-        <td>Department</td>
-        <td>Downloads</td>
-      </tr>
-    </table> -->
-    <div class="count-cards">Projects</div>
-    <div class="count-cards" >guides</div>
-    <div class="count-cards">Department</div>
-    <div class="count-cards">Downloads</div>
-  </div>
-  <h3>Why SPARK ?</h3>
-  <p></p>
-  <div class="why-cards-container">
-    <div class="why-card">
-      <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+    <div class="count-item">
+        <div style="font-size: 1.5rem; font-weight: bold;">Guides</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">{{ guides|length }}</div>
+        <small>Mentors</small>
     </div>
-    <div class="why-card">
-       <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+    <div class="count-item">
+        <div style="font-size: 1.5rem; font-weight: bold;">Departments</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">18+</div>
+        <small>Verified</small>
     </div>
-    <div class="why-card">
-       <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+    <div class="count-item">
+        <div style="font-size: 1.5rem; font-weight: bold;">Downloads</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">1000+</div>
+
+        <small>Resources</small>
     </div>
-    <div class="why-card">
-       <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+</div>
+
+<h3 style="text-align: center; margin-bottom: 30px;">Why SPARK?</h3>
+<div class="grid">
+    <div class="card why-card" style="text-align: center;">
+        <div style="height: 60px; background: #edf2f7; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem;">📂</span>
+        </div>
+        <h5>Centralized Research</h5>
+        <p style="font-size: 0.85rem; color: #4a5568;">All previous projects organized in one searchable database.</p>
     </div>
-    <div class="why-card">
-       <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+    <div class="card why-card" style="text-align: center;">
+        <div style="height: 60px; background: #edf2f7; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem;">🚀</span>
+        </div>
+        <h5>Ignite Innovation</h5>
+        <p style="font-size: 0.85rem; color: #4a5568;">Use existing work as a baseline for new, groundbreaking ideas.</p>
     </div>
-    <div class="why-card">
-       <img src="" alt="container">
-      <h5></h5>
-      <h6></h6>
+    <div class="card why-card" style="text-align: center;">
+        <div style="height: 60px; background: #edf2f7; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem;">🤝</span>
+        </div>
+        <h5>Guide Mentorship</h5>
+        <p style="font-size: 0.85rem; color: #4a5568;">Seamless interaction between students and faculty guides.</p>
     </div>
-  </div>
-  <footer>&copy SPARK, All Rights Reserved</footer>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,116 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <button onclick="window.location.href='/';">Home</button>
+{% extends "base.html" %}
 
-</head>
-<body>
-     <h1>Role:Admin</h1>
-<div>
-    <h2>M Nithin Shetty</h2>
-    <h5>Admin of SPARK</h5>
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="card profile-header" style="margin-bottom: 20px; border-left: 5px solid var(--primary-blue);">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">M Nithin Shetty</h2>
+            <p style="color: #718096; margin: 5px 0;">Admin of SPARK | Role: Admin</p>
+        </div>
+        <button class="btn-alt" onclick="window.location.href='/';">Return Home</button>
+    </div>
 </div>
-<div>
-    <input type="button" value="All Projects">
-    <input type="button" value="All Guides">
-    <input type="button" value="All Students">
+
+<div class="grid" style="margin-bottom: 30px;">
+    <div class="card action-group">
+        <h4>Navigation</h4>
+        <input type="button" class="btn-prof" value="All Projects" onclick="showTable('projects')">
+        <input type="button" class="btn-prof" value="All Guides" onclick="showTable('guides')">
+        <input type="button" class="btn-prof" value="All Students" onclick="showTable('students')">
+    </div>
+    <div class="card action-group">
+        <h4>Management</h4>
+        <input type="button" class="btn-prof primary" value="+ Add New Guide" onclick="window.location.href='/admin/add_guide';">
+        <input type="button" class="btn-prof primary" value="+ Add New Students" onclick="window.location.href='/admin/add_students';">
+    </div>
 </div>
-<div>
-    <input type="button" value="+ Add New Guide" onclick="window.location.href='/admin/add_guide';">
-    <input type="button" value="+ Add New Students" onclick="window.location.href='/admin/add_students';">
-</div>
-<div>
-    <input type="text">
-    <input type="button" value="Search">
-    <label for=""> &nbsp; Filter By Department</label>
-    <select name="department" id="">
-        <option value="All" id="pname">All</option>
-        <option value="" id="gname"></option>
-    </select>
-    <table border="2">
-        <tr>
-            <th>Project ID</th>
-            <th>Project Name</th>
-            <th>Guide Name</th>
-            <th>Department</th>
-            <th>No of Students</th>
-            <th>Date</th>
-            <th>View/Download</th>
-        </tr>
-        {% for p in projects %}
-        <tr>
-        <td>{{p.id}}</td>
-        <td>{{p.name}}</td>
-        <td>{{p.guide.name}}</td>
-        <td>{{p.guide.department}}</td>
-        <td>{{p.students|length}}</td>
-        <td>{{p.submission_date}}</td>
-        <td><a href="/download/{{p.stored_name}}">download</a></td>
-        </tr>
-        {% endfor %}
+
+<div id="projects-table" class="card table-container">
+    <div class="table-header">
+        <h3>Project Management</h3>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search projects...">
+            <input type="button" class="search-btn" value="Search">
+            <select name="department" class="filter-select">
+                <option value="All" id="pname">All Departments</option>
+                <option value="" id="gname"></option>
+            </select>
+        </div>
+    </div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Project ID</th>
+                <th>Project Name</th>
+                <th>Guide Name</th>
+                <th>Department</th>
+                <th>Students</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in projects %}
+            <tr>
+                <td>{{p.id}}</td>
+                <td>{{p.name}}</td>
+                <td>{{p.guide.name}}</td>
+                <td>{{p.guide.department}}</td>
+                <td>{{p.students|length}}</td>
+                <td>{{p.submission_date}}</td>
+                <td><a href="/download/{{p.stored_name}}" class="link-btn">Download</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
-<div>
-     <input type="text">
-    <input type="button" value="Search">
-    <label for=""> &nbsp; Filter By Department</label>
-    <select name="department" id="">
-        <option value="All" id="pname">All</option>
-        <option value="" id="gname"></option>
-    </select>
-    <table border="2">
-        <tr>
-            <th>Guide ID</th>
-            <th>Guide Name</th>
-            <th>Guide E-mail</th>
-            <th>Password</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-         {% for g in guides %}
-        <tr>
-            <td>{{ g.id }}</td><td>{{ g.name }}</td>
-            <td>{{ g.email }}</td>
-            <td>{{ g.password }}</td>
-            <td>{{ g.department }}</td>
-            <td>{{ "Active" if g.is_active else "Inactive" }}</td>
-            <td><a href="/admin/toggle_guide/{{ g.id }}">Toggle Status</a></td>
-        </tr>
-        {% endfor %}
+
+<div id="guides-table" class="card table-container" style="display:none;">
+    <div class="table-header">
+        <h3>Guide Directory</h3>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search guides...">
+            <input type="button" class="search-btn" value="Search">
+            <select name="department" class="filter-select">
+                <option value="All">All Departments</option>
+            </select>
+        </div>
+    </div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Dept</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in guides %}
+            <tr>
+                <td>{{ g.id }}</td>
+                <td>{{ g.name }}</td>
+                <td>{{ g.email }}</td>
+                <td><code>{{ g.password }}</code></td>
+                <td>{{ g.department }}</td>
+                <td><span class="status-pill {{ 'active' if g.is_active else 'inactive' }}">{{ "Active" if g.is_active else "Inactive" }}</span></td>
+                <td><a href="/admin/toggle_guide/{{ g.id }}" class="link-btn toggle">Toggle Status</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
-<div>
-     <input type="text">
-    <input type="button" value="Search">
-    <label for=""> &nbsp; Filter By Department</label>
-    <select name="department" id="">
-        <option value="All" id="pname">All</option>
-        <option value="" id="gname"></option>
-    </select>
-    <table border="2">
-        <tr>
-            <th>Roll No</th>
-            <th>Name</th>
-            <th>E-mail</th>
-            <th>Course</th>
-            <th>Batch</th>
-            <th>Password</th>
-        </tr>
-        {% for s in students %}
-        <tr>
-            <td>{{s.roll_no}}</td>
-            <td>{{s.name}}</td>
-            <td>{{s.email}}</td>
-            <td>{{s.course}}</td>
-            <td>{{s.batch}}</td>
-            <td>{{s.password}}</td>
-        </tr>
-        {% endfor %}
+
+<div id="students-table" class="card table-container" style="display:none;">
+    <div class="table-header">
+        <h3>Student Records</h3>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search students...">
+            <input type="button" class="search-btn" value="Search">
+        </div>
+    </div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>E-mail</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Password</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{s.roll_no}}</td>
+                <td>{{s.name}}</td>
+                <td>{{s.email}}</td>
+                <td>{{s.course}}</td>
+                <td>{{s.batch}}</td>
+                <td><code>{{s.password}}</code></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
-</body>
-</html>
+<script>
+    function showTable(table) {
+        document.getElementById('projects-table').style.display = (table === 'projects') ? '' : 'none';
+        document.getElementById('guides-table').style.display = (table === 'guides') ? '' : 'none';
+        document.getElementById('students-table').style.display = (table === 'students') ? '' : 'none';
+    }
+</script>
+{% endblock %}

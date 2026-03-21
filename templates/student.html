@@ -1,98 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
-    <button onclick="window.location.href='/';">Home</button>
-</head>
-<body>
-    <h1>Role:Student</h1>
-<div>
-    <h2>{{student.name}}</h2>
-    <h5>{{student.roll_no}}</h5>
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="card profile-header" style="margin-bottom: 20px; border-left: 5px solid var(--primary-blue);">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">{{student.name}}</h2>
+            <p style="color: #718096; margin: 5px 0;">Roll No: {{student.roll_no}} | Role: Student</p>
+        </div>
+        <button class="btn-alt" onclick="window.location.href='/';">Return Home</button>
+    </div>
 </div>
-<div>
-    <input type="button" value="All Projects">
-    <input type="button" value="All Guides">
+
+<div class="card action-group" style="margin-bottom: 30px;">
+    <input type="button" class="btn-prof" value="All Projects" onclick="showTable('projects')">
+    <input type="button" class="btn-prof" value="All Guides" onclick="showTable('guides')">
 </div>
-<div><form action="/student/dashboard">
-    <input type="text" name="psearch">
-    <input type="submit" value="Search">
-    <label for=""> &nbsp; Filter By Department</label>
-    <select name="pdept" id="">
-        <option value="All" id="pname">All</option>
-        <option value="" id="gname"></option>
-    </select>
-    <table border="2">
-        <tr>
-            <th>Project ID</th>
-            <th>Project Name</th>
-            <th>Guide Name</th>
-            <th>No of Students</th>
-            <th>Department</th>
-            <th>Date</th>
-            <th>View/Download</th>
-        </tr>
-        {%for p in projects %}
-        <tr>
-            <td>{{p.id}}</td>
-            <td>{{p.name}}</td>
-            <td>{{p.guide.name}}</td>
-            <td>{{p.students|length}}</td>
-            <td>{{p.guide.department}}</td>
-            <td>{{p.submission_date}}</td>
-            <td><a href="/download/{{p.stored_name}}">Download</a></td>
-        </tr>
-        {% endfor %}
-    </table>
-    </form>
-</div>
-<div>
-    <input type="text" name="gsearch">
-    <input type="button" value="Search">
-    <label for=""> &nbsp; Filter By Department</label>
-    <select name="gdept" id="">
-        <option value="">Sanskrit</option>
-            <option value="">Kannada</option>
-            <option value="">Hindi</option>
-            <option value="">English</option>
-            <option value="">History</option>
-            <option value="">Economics and Rural Development</option>
-            <option value="">Political Science</option>
-            <option value="">Journalism</option>
-            <option value="">Home Science</option>
-            <option value="">Physics</option>
-            <option value="">Chemistry</option>
-            <option value="">Mathematics</option>
-            <option value="">Botany</option>
-            <option value="">Biotechnology</option>
-            <option value="">Statistics</option>
-            <option value="">Psychology</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="">Commerce</option>
-            <option value="">Business Administration</option>
-        <option value="All" id="pname">All</option>
-        <option value="" id=""></option>
-    </select>
-    <table border="2">
-        <tr>
-            <th>Guide ID</th>
-            <th>Guide Name</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th>Total Projects</th>
-        </tr>
-        {% for guide in guides %}
-        <tr></tr>
-        <td>{{guide.id}}</td>
-        <td>{{guide.name}}</td>
-        <td>{{guide.department}}</td>
-        <td>{{ "Active" if guide.is_active else "Inactive" }}</td>
-        <td>{{guide.projects|length}}</td>
-        </tr>
-        {% endfor %}
+
+<div id="projects-table" class="card table-container">
+    <div class="table-header">
+        <h3>Project Repository</h3>
+        <form action="/student/dashboard" method="GET" class="search-box">
+            <input type="text" name="psearch" class="search-input" placeholder="Search project names...">
+            <select name="pdept" class="filter-select">
+                <option value="All">All Departments</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Mathematics">Mathematics</option>
+                </select>
+            <input type="submit" class="search-btn" value="Search">
+        </form>
+    </div>
+    
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project Name</th>
+                <th>Guide</th>
+                <th>Dept</th>
+                <th>Students</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in projects %}
+            <tr>
+                <td>{{p.id}}</td>
+                <td><strong>{{p.name}}</strong></td>
+                <td>{{p.guide.name}}</td>
+                <td>{{p.guide.department}}</td>
+                <td>{{p.students|length}}</td>
+                <td>{{p.submission_date}}</td>
+                <td><a href="/download/{{p.stored_name}}" class="link-btn">View/Download</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
-</body>
-</html>
+
+<div id="guides-table" class="card table-container" style="margin-top: 30px; display:none;">
+    <div class="table-header">
+        <h3>Available Guides</h3>
+    </div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Guide Name</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Total Projects</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for guide in guides %}
+            <tr>
+                <td>{{guide.id}}</td>
+                <td>{{guide.name}}</td>
+                <td>{{guide.department}}</td>
+                <td><span class="status-pill {{ 'active' if guide.is_active else 'inactive' }}">{{ "Active" if guide.is_active else "Inactive" }}</span></td>
+                <td>{{guide.projects|length}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function showTable(table) {
+        document.getElementById('projects-table').style.display = (table === 'projects') ? '' : 'none';
+        document.getElementById('guides-table').style.display = (table === 'guides') ? '' : 'none';
+    }
+</script>
+{% endblock %}

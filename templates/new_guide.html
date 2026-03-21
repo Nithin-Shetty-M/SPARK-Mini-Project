@@ -1,50 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Guide</title>
-    <button onclick="window.location.href='/admin/dashboard';">Back</button>
+{% extends "base.html" %}
 
-</head>
-<body>
-    <h3>New Guide</h3>
-    <form action="/admin/new_guide" method="post">
-        <label for="">Guide Name</label>
-        <input type="text" name="name" id="">
-        <label for="">E-Mail</label>
-        <input type="email" name="email" id="">
-        <label for="">Give New Password</label>
-        <input type="password" name="password" id="">
-        <label for="">Department</label>
-        <select name="dept" id="">
-            <option value="">Sanskrit</option>
-            <option value="">Kannada</option>
-            <option value="">Hindi</option>
-            <option value="">English</option>
-            <option value="">History</option>
-            <option value="">Economics and Rural Development</option>
-            <option value="">Political Science</option>
-            <option value="">Journalism</option>
-            <option value="">Home Science</option>
-            <option value="">Physics</option>
-            <option value="">Chemistry</option>
-            <option value="">Mathematics</option>
-            <option value="">Botany</option>
-            <option value="">Biotechnology</option>
-            <option value="">Statistics</option>
-            <option value="">Psychology</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="">Commerce</option>
-            <option value="">Business Administration</option>
-            <option value=""></option>
-        </select>
-        <!-- <label for="">Status</label>
-        <select name="" id="">
-            <option value="True">Active</option>
-            <option value="False">Inactive</option>
-        </select> -->
-        <input type="submit" value="Add">
-    </form>
-</body>
-</html>
+{% block title %}Add New Guide{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+        <button class="btn-prof" onclick="window.location.href='/admin/dashboard';" style="padding: 5px 15px;">← Back</button>
+        <h2 style="margin: 0;">Register New Faculty Guide</h2>
+    </div>
+
+    <div class="card">
+        <form action="/admin/new_guide" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <div class="form-group">
+                <label for="name" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">Full Name</label>
+                <input type="text" name="name" id="name" required placeholder="e.g. Dr. Smith"
+                       style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group">
+                <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">Official E-Mail</label>
+                <input type="email" name="email" id="email" required placeholder="guide@sdmcujire.in"
+                       style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group">
+                <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">Access Password</label>
+                <input type="password" name="password" id="password" required placeholder="Create a secure password"
+                       style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group">
+                <label for="dept" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">Department Assignment</label>
+                <select name="dept" id="dept" required class="filter-select" style="width: 100%; padding: 10px;">
+                    <option value="" disabled selected>Select Department...</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Botany">Botany</option>
+                    <option value="Biotechnology">Biotechnology</option>
+                    <option value="Statistics">Statistics</option>
+                    <option value="Psychology">Psychology</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Business Administration">Business Administration</option>
+                    <option value="Sanskrit">Sanskrit</option>
+                    <option value="Kannada">Kannada</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="English">English</option>
+                    <option value="History">History</option>
+                    <option value="Economics and Rural Development">Economics and Rural Development</option>
+                    <option value="Political Science">Political Science</option>
+                    <option value="Journalism">Journalism</option>
+                    <option value="Home Science">Home Science</option>
+                </select>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 10px 0;">
+
+            <input type="submit" value="Register Guide" class="btn-prof primary" 
+                   style="padding: 12px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for
+from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import pandas as pd
 import uuid
+import io
+import csv
 
 app = Flask(__name__)
 app.secret_key = "college_secret_key"
@@ -62,12 +64,38 @@ class Student_login(db.Model):
 
 # --- Routes ---
 
+# @app.before_request
+# def initrole():
+#     session['role'] = ''
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    guides = Guide.query.all()
+    projects = Project.query.all()
+    return render_template('index.html',guides=guides,projects=projects)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    session['role'] = ''
+    guides = Guide.query.all()
+    projects = Project.query.all()
+    return render_template('index.html',guides=guides,projects=projects)
+
+@app.route('/student_info/dashboard')
+def student_info():
+    return render_template('student_info.html')
+
+@app.route('/guide_info/dashboard')
+def guide_info():
+    return render_template('guide_info.html')
+
+@app.route('/admin_info/dashboard')
+def admin_info():
+    return render_template('admin_info.html')
 
 # Basic Login Router
-@app.route('/login/<role>', methods=['GET', 'POST'])
+@app.route('/login/<role>', methods=['GET', 'POST']) 
 def login(role):
     if request.method == 'POST':
         email = request.form.get('email')
@@ -98,6 +126,8 @@ def login(role):
 
 @app.route('/admin/dashboard')
 def admin_dash():
+    if(session['role']!='admin'):
+        return "Your Session Has been Expired", 400
     guides = Guide.query.all()
     projects = Project.query.all()
     students= Student_login.query.all()
@@ -153,9 +183,29 @@ def toggle_guide(id):
     db.session.commit()
     return redirect('/admin/dashboard')
 
+@app.route('/admin/download_template')
+def download_template():
+    # Define the exact column headers your backend expects
+    column_headers = ['roll_no', 'name', 'course', 'email', 'password', 'batch']
+    
+    # Create an in-memory text stream
+    dest = io.StringIO()
+    writer = csv.writer(dest)
+    writer.writerow(column_headers)
+    
+    # Return the CSV as a downloadable file
+    output = dest.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=student_template.csv"}
+    )
+
 #--- Guide functions
 @app.route('/guide/dashboard')
 def guide_dash():
+    if(session['role']!='guide'):
+        return "Your Session Has been Expired", 400
     g=session['user_id']
     return render_template("guide.html",g=g, guide=Guide.query.get(g))
 
@@ -252,6 +302,8 @@ def delete_project(pid):
 
 @app.route('/student/dashboard')
 def student_dash():
+    if(session['role']!='student'):
+        return "Your Session Has been Expired", 400
     s=session['student_rono']
     student=Student_login.query.get(s)
     guides=Guide.query.all()

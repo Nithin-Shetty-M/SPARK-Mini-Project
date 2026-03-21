@@ -1,31 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Students</title>
-    <button onclick="window.location.href='/admin/dashboard';">Back</button>
 
-</head>
-<body>
-    <div>
-        <h3>Add New Students list using csv file</h3>
-    <form action="/admin/new_students" method="post" enctype="multipart/form-data">
-        <table border="2">
-            <h4>FORMAT</h4>
-            <tr>
-                <th>RollNo</th>
-                <th>Name</th>
-                <th>Course</th>
-                <th>Batch</th>
-                <th>E-mail</th>
-                <th>Password</th>
+{% extends "base.html" %}
 
-            </tr>
-        </table>
-        <input type="file" name="file" id="" accept=".csv">
-        <input type="submit" value="Add Students">
-    </form>
+{% block title %}Bulk Student Enrollment{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+        <button class="btn-prof" onclick="window.location.href='/admin/dashboard';" style="padding: 5px 15px;">← Back</button>
+        <h2 style="margin: 0;">Upload Student List</h2>
     </div>
-</body>
-</html>
+
+    <div class="card">
+        <h3>Step 1: Download Format</h3>
+        <p style="color: var(--text-gray); font-size: 0.9rem;">
+            Please use our standard CSV template to ensure the system recognizes your data correctly.
+        </p>
+        
+        <a href="/admin/download_template" class="btn-prof primary" style="text-decoration: none; display: inline-block; background-color: #48bb78;">
+            📥 Download Sample CSV Template
+        </a>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+        <h3>Step 2: Upload Completed File</h3>
+        <form action="/admin/new_students" method="post" enctype="multipart/form-data">
+            <div style="border: 2px dashed var(--border-color); padding: 40px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <input type="file" name="file" id="file" accept=".csv" required style="cursor: pointer;">
+                <p style="margin-top: 10px; font-size: 0.8rem; color: var(--text-gray);">Only .csv files are supported</p>
+            </div>
+
+            <button type="submit" class="btn-prof primary" style="width: 100%; padding: 15px;">
+                Confirm and Import Students
+            </button>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 24px; border-left: 5px solid var(--primary-blue);">
+        <h4 style="margin-top: 0;">Formatting Rules:</h4>
+        <ul style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.6;">
+            <li><strong>roll_no:</strong> Must be unique for every student.</li>
+            <li><strong>email:</strong> Use the official college email format.</li>
+            <li><strong>batch:</strong> Enter in YYYY-YY format (e.g., 2022-25).</li>
+            <li>Do not change the header names in the first row.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

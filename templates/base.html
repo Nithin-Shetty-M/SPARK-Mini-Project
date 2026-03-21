@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARK | {% block title %}{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">S</div>
+                <span class="logo-text">SPARK</span>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/" class="nav-item">🏠 Home</a></li>
+                    <li><a href="/student/dashboard" class="nav-item">🎓 Student Portal</a></li>
+                    <li><a href="/guide/dashboard" class="nav-item">👨‍🏫 Guide Portal</a></li>
+                    <li><a href="/admin/dashboard" class="nav-item">🛡️ Admin Panel</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2024 SDM Ujire</p>
+            </div>
+        </aside> -->
+        <aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo">S</div>
+        <h1 class="brand-name">SPARK</h1>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-link"><span>🏠</span> Home</a>
+        <a href="/student_info/dashboard" class="nav-link"><span>🎓</span> Students</a>
+        <a href="/guide_info/dashboard" class="nav-link"><span>👨‍🏫</span> Guides</a>
+        <a href="/admin_info/dashboard" class="nav-link"><span>🛡️</span> Admin</a>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+    
+    <div class="sidebar-user">
+        <button class="logout-btn" onclick="window.location.href='/'">Exit</button>
+    </div>
+</aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title">{{ self.title() }}</h2>
+                </div>
+                <div class="header-right">
+                    <button class="logout-btn" onclick="window.location.href='/logout';">Logout</button>
+                </div>
+            </header>
+
+            <section class="page-body">
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Find all search buttons on the page
+            const searchBtns = document.querySelectorAll('.search-btn');
+            
+            searchBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Logic: Find the nearest table container to this specific button
+                    const container = e.target.closest('.table-container');
+                    if (!container) return;
+
+                    const input = container.querySelector('.search-input');
+                    const filter = input.value.toLowerCase();
+                    const rows = container.querySelectorAll('tbody tr');
+
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        // Hide rows that don't match the search text
+                        row.style.display = text.includes(filter) ? '' : 'none';
+                    });
+                });
+            });
+        });
+        function exitwindow()
+        {
+            alert('Are you sure? you wanna exit');
+            window.close();
+        }
+    </script>
+</body>
+</html>

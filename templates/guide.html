@@ -1,44 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guide Dashboard</title>
-    <button onclick="window.location.href='/';">Home</button>
+{% extends "base.html" %}
 
-</head>
-<body>
-    <h3>Role: Guide</h3>
-    <div>
-        <h2>{{guide.name}}</h2>
-        <h5>Department of {{guide.department}} </h5>
+{% block title %}Guide Dashboard{% endblock %}
+
+{% block content %}
+<div class="card profile-header" style="margin-bottom: 20px; border-left: 5px solid #48bb78;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">{{guide.name}}</h2>
+            <p style="color: #718096; margin: 5px 0;">Department of {{guide.department}} | Role: Guide</p>
+        </div>
+        <div style="text-align: right;">
+            <span class="status-pill {{ 'active' if guide.is_active else 'inactive' }}" style="display: inline-block; margin-bottom: 10px;">
+                Status: {{ "Active" if guide.is_active else "Inactive" }}
+            </span>
+            <br>
+            <button class="btn-alt" onclick="window.location.href='/';">Return Home</button>
+        </div>
     </div>
-    <div>
-    <h3>Status:{{ "Active" if guide.is_active else "Inactive" }}</h3>
-    <input type="button" value="+ Upload New Project" onclick="window.location.href='/guide/new_project/{{g}}';">
-    <!-- <input type="button" value="+ Upload New Student Details" onclick="window.location.href='bulk_students.html'"> -->
+</div>
+
+<div class="card" style="margin-bottom: 30px;">
+    <h4 style="margin-top: 0;">Project Management</h4>
+    <input type="button" class="btn-prof primary" value="+ Upload New Project" onclick="checkActiveGuide();">
+</div>
+
+<div class="card table-container">
+    <div class="table-header">
+        <h3>Assigned Projects</h3>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search your projects...">
+            <input type="button" class="search-btn" value="Search">
+        </div>
     </div>
-    <div>
-    <input type="text">
-    <input type="button" value="Search">
-    <table border="2">
-        <tr>
-            <th>Project ID</th>
-            <th>Project Name</th>
-            <!-- <th>Guide Name</th> -->
-            <!-- <th>Department</th> -->
-             <th>No of Students</th>
-            <th>Date</th>
-            <th>Remove Project</th>
-        </tr>
-        {% for p in guide.projects %}
-        <td>{{p.id}}</td>
-        <td>{{p.name}}</td>
-        <td>{{p.students|length}}</td>
-        <td>{{p.submission_date}}</td>
-        <td><a href="/delete_project/{{p.id}}" onclick="return confirm('Are you sure? This will delete the project, the file, and all registered students!');">Remove</a></td>
-        {% endfor %}
+    
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Project ID</th>
+                <th>Project Name</th>
+                <th>No. of Students</th>
+                <th>Date Submitted</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in guide.projects %}
+            <tr>
+                <td>{{p.id}}</td>
+                <td><strong>{{p.name}}</strong></td>
+                <td>{{p.students|length}}</td>
+                <td>{{p.submission_date}}</td>
+                <td style="text-align: right;">
+                    <a href="/delete_project/{{p.id}}" class="link-btn toggle" 
+                       onclick="return confirm('Are you sure you want to remove this project?')" 
+                       style="color: #e53e3e;">Remove</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not guide.projects %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #a0aec0; padding: 40px;">No projects uploaded yet.</td>
+            </tr>
+            {% endif %}
+        </tbody>
     </table>
-    </div>
-</body>
-</html>
+</div>
+<script>
+    function checkActiveGuide() {
+        var isActive = {{ 'true' if guide.is_active else 'false' }};
+        if (isActive) {
+            window.location.href = '/guide/new_project/{{guide.id}}';
+        } else {
+            alert('You are not an active Guide. Only active Guides can upload new projects.');
+        }
+    }
+</script>
+{% endblock %}

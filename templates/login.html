@@ -1,26 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPARK-Login</title>
-</head>
-<body>
-    <a href="/"><- Back to Home</a>
-    <form action="" method="post">
-        <label for="role">Login as {{role}}</label><br>
-            <!-- <select name="role" id="" Select your role...>
-                <option value="" disabled selected hidden>Select your role...</option>
-                <option value="student">Student</option>
-                <option value="guide">Guide</option>
-                <option value="admin">Admin</option>
-            </select><br> -->
-        <label for="mail">E-mail Address</label><br>
-        <input type="email" placeholder="@sdmcujire.in" name="email"><br>
-        <label for="pass">Password</label><br>
-        <input type="password" name="password" placeholder="Enter PassWord" ><br>
-        <input type="submit" value="LOGIN" name="submit">
-        <!-- <h4>New user?<a href="">Sign In</a></h4> -->
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}SPARK - {{role}} Login{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
+            <h2 style="margin: 0; color: var(--sidebar-color);">Login as {{role}}</h2>
+            <p style="color: #718096; font-size: 0.9rem;">Please enter your credentials to continue</p>
+        </div>
+
+        <form action="" method="post">
+            <div style="margin-bottom: 20px;">
+                <label for="mail" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #4a5568;">E-mail Address</label>
+                <input type="email" 
+                       id="mail" 
+                       name="email" 
+                       placeholder="name@sdmcujire.in" 
+                       required 
+                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label for="pass" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #4a5568;">Password</label>
+                <input type="password" 
+                       id="pass" 
+                       name="password" 
+                       placeholder="Enter your password" 
+                       required 
+                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+
+            <input type="submit" 
+                   name="submit" 
+                   value="LOGIN" 
+                   class="btn-prof primary" 
+                   style="width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; letter-spacing: 1px; cursor: pointer;">
+        </form>
+
+        <div style="margin-top: 25px; text-align: center;">
+            <a href="/" style="text-decoration: none; color: var(--primary-blue); font-size: 0.9rem;">← Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
