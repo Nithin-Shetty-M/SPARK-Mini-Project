@@ -24,6 +24,22 @@
         <h4>Management</h4>
         <input type="button" class="btn-prof primary" value="+ Add New Guide" onclick="window.location.href='/admin/add_guide';">
         <input type="button" class="btn-prof primary" value="+ Add New Students" onclick="window.location.href='/admin/add_students';">
+        <input type="button" class="btn-prof primary" value="+ Add New Department" onclick="openDepartmentModal();">
+    </div>
+</div>
+
+<div id="department-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeDepartmentModal()">&times;</span>
+        <h3>Add New Department</h3>
+        <form action="/admin/new_department" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+            <label for="department-name" style="font-weight: 600;">Department Name</label>
+            <input type="text" id="department-name" name="name" required placeholder="Enter department name" style="padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; width: 100%;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" class="btn-alt" onclick="closeDepartmentModal()" style="padding: 10px 16px;">Cancel</button>
+                <button type="submit" class="btn-prof primary" style="padding: 10px 16px;">Add Department</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -55,7 +71,7 @@
                 <td>{{p.name}}</td>
                 <td>{{p.guide.name}}</td>
                 <td>{{p.guide.department}}</td>
-                <td>{{p.students|length}}</td>
+                <td><a href="#" onclick="showStudents({{p.id}}); return false;" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
                 <td>{{p.submission_date}}</td>
                 <td><a href="/download/{{p.stored_name}}" class="link-btn">Download</a></td>
             </tr>
@@ -134,11 +150,110 @@
         </tbody>
     </table>
 </div>
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .modal.open {
+        display: flex;
+    }
+    .modal-content {
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 12px;
+        width: min(500px, 90%);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+    .modal-close {
+        float: right;
+        font-size: 24px;
+        cursor: pointer;
+        color: #4a5568;
+    }
+    .modal-content h3 {
+        margin-top: 0;
+    }
+</style>
 <script>
     function showTable(table) {
         document.getElementById('projects-table').style.display = (table === 'projects') ? '' : 'none';
         document.getElementById('guides-table').style.display = (table === 'guides') ? '' : 'none';
         document.getElementById('students-table').style.display = (table === 'students') ? '' : 'none';
     }
+
+    function openDepartmentModal() {
+        document.getElementById('department-modal').classList.add('open');
+        document.getElementById('department-name').value = '';
+        document.getElementById('department-name').focus();
+    }
+
+    function closeDepartmentModal() {
+        document.getElementById('department-modal').classList.remove('open');
+    }
+
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('department-modal');
+        if (event.target === modal) {
+            closeDepartmentModal();
+        }
+    });
+
+    var studentsData = {
+    {% for p in projects %}
+        {{ p.id }}: [
+            {% for s in p.students %}
+                {name: "{{ s.name }}", roll_no: "{{ s.roll_no }}", course: "{{ s.course }}", section: "{{ s.section }}", academic_year: "{{ s.academic_year }}"},
+            {% endfor %}
+        ],
+    {% endfor %}
+    };
+
+    function showStudents(projectId) {
+        var students = studentsData[projectId] || [];
+        var list = document.getElementById('studentList');
+        if (students.length === 0) {
+            list.innerHTML = '<p style="margin:0; color:#4a5568;">No students are attached to this project.</p>';
+        } else {
+            var listHtml = '<ul style="padding-left: 20px; margin: 0;">';
+            students.forEach(function(student) {
+                listHtml += '<li style="margin-bottom: 10px;"><strong>' + student.name + '</strong> (' + student.roll_no + ', ' + student.course + ', Section ' + student.section + ', ' + student.academic_year + ')</li>';
+            });
+            listHtml += '</ul>';
+            list.innerHTML = listHtml;
+        }
+        document.getElementById('studentModal').classList.add('open');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var studentClose = document.getElementById('student-close');
+        if (studentClose) {
+            studentClose.onclick = function() {
+                document.getElementById('studentModal').classList.remove('open');
+            };
+        }
+
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('studentModal')) {
+                document.getElementById('studentModal').classList.remove('open');
+            }
+        });
+    });
 </script>
+
+<div id="studentModal" class="modal">
+    <div class="modal-content" style="background-color: #fefefe; padding: 20px; border-radius: 16px; width: 90%; max-width: 600px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
+        <span id="student-close" style="color: #4a5568; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+        <h3 style="margin-top: 0;">Students in Project</h3>
+        <div id="studentList"></div>
+    </div>
+</div>
 {% endblock %}

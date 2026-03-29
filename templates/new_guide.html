@@ -32,28 +32,16 @@
 
             <div class="form-group">
                 <label for="dept" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;">Department Assignment</label>
+                {% if departments %}
                 <select name="dept" id="dept" required class="filter-select" style="width: 100%; padding: 10px;">
                     <option value="" disabled selected>Select Department...</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Botany">Botany</option>
-                    <option value="Biotechnology">Biotechnology</option>
-                    <option value="Statistics">Statistics</option>
-                    <option value="Psychology">Psychology</option>
-                    <option value="Commerce">Commerce</option>
-                    <option value="Business Administration">Business Administration</option>
-                    <option value="Sanskrit">Sanskrit</option>
-                    <option value="Kannada">Kannada</option>
-                    <option value="Hindi">Hindi</option>
-                    <option value="English">English</option>
-                    <option value="History">History</option>
-                    <option value="Economics and Rural Development">Economics and Rural Development</option>
-                    <option value="Political Science">Political Science</option>
-                    <option value="Journalism">Journalism</option>
-                    <option value="Home Science">Home Science</option>
+                    {% for department in departments %}
+                        <option value="{{ department.name }}">{{ department.name }}</option>
+                    {% endfor %}
                 </select>
+                {% else %}
+                <p style="margin: 0; color: #e53e3e;">No departments yet. Please add a department from the Admin dashboard first.</p>
+                {% endif %}
             </div>
 
             <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 10px 0;">

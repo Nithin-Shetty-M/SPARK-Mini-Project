@@ -44,7 +44,7 @@
     <div class="sidebar-spacer"></div>
     
     <div class="sidebar-user">
-        <button class="logout-btn" onclick="window.location.href='/'">Exit</button>
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button">Dark Mode</button>
     </div>
 </aside>
 
@@ -68,10 +68,32 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Find all search buttons on the page
             const searchBtns = document.querySelectorAll('.search-btn');
-            
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const root = document.documentElement;
+
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') {
+                root.classList.add('dark-theme');
+            }
+
+            function updateThemeButton() {
+                if (!themeToggleBtn) return;
+                themeToggleBtn.textContent = root.classList.contains('dark-theme') ? 'Light Mode' : 'Dark Mode';
+            }
+
+            updateThemeButton();
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    root.classList.toggle('dark-theme');
+                    const theme = root.classList.contains('dark-theme') ? 'dark' : 'light';
+                    localStorage.setItem('theme', theme);
+                    updateThemeButton();
+                });
+            }
+
             searchBtns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    // Logic: Find the nearest table container to this specific button
                     const container = e.target.closest('.table-container');
                     if (!container) return;
 
@@ -81,17 +103,11 @@
 
                     rows.forEach(row => {
                         const text = row.textContent.toLowerCase();
-                        // Hide rows that don't match the search text
                         row.style.display = text.includes(filter) ? '' : 'none';
                     });
                 });
             });
         });
-        function exitwindow()
-        {
-            alert('Are you sure? you wanna exit');
-            window.close();
-        }
     </script>
 </body>
 </html>

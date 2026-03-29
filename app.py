@@ -26,6 +26,10 @@ class Guide(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     projects = db.relationship('Project', backref='guide', lazy=True)
 
+class Department(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200))
@@ -72,7 +76,8 @@ class Student_login(db.Model):
 def index():
     guides = Guide.query.all()
     projects = Project.query.all()
-    return render_template('index.html',guides=guides,projects=projects)
+    departments=Department.query.all()
+    return render_template('index.html',guides=guides,projects=projects,departments=departments)
 
 @app.route('/logout')
 def logout():
@@ -80,7 +85,8 @@ def logout():
     session['role'] = ''
     guides = Guide.query.all()
     projects = Project.query.all()
-    return render_template('index.html',guides=guides,projects=projects)
+    departments=Department.query.all()
+    return render_template('index.html',guides=guides,projects=projects,departments=departments)
 
 @app.route('/student_info/dashboard')
 def student_info():
@@ -131,15 +137,35 @@ def admin_dash():
     guides = Guide.query.all()
     projects = Project.query.all()
     students= Student_login.query.all()
-    return render_template('admin.html', guides=guides, projects=projects,students=students)
+    departments = Department.query.order_by(Department.name).all()
+    return render_template('admin.html', guides=guides, projects=projects, students=students, departments=departments)
 
 @app.route('/admin/add_guide')
 def add_guide():
-    return render_template('new_guide.html')
+    departments = Department.query.order_by(Department.name).all()
+    return render_template('new_guide.html', departments=departments)
 
 @app.route('/admin/add_students')
 def add_students():
     return render_template('bulk_students.html')
+
+@app.route('/admin/new_department', methods=['POST'])
+def new_department():
+    if session.get('role') != 'admin':
+        return "Your Session Has been Expired", 400
+
+    name = request.form.get('name', '').strip()
+    if not name:
+        return "Department name is required", 400
+
+    existing = Department.query.filter(Department.name.ilike(name)).first()
+    if existing:
+        return redirect('/admin/dashboard')
+
+    dept = Department(name=name)
+    db.session.add(dept)
+    db.session.commit()
+    return redirect('/admin/dashboard')
 
 @app.route('/admin/new_guide', methods=['POST'])
 def new_guide():
@@ -270,9 +296,17 @@ def upload_file(G):
 
 @app.route('/delete_project/<int:pid>')
 def delete_project(pid):
-    # 1. Fetch the project record
+    if session.get('role') != 'guide':
+        return "Your Session Has been Expired", 400
+
+    guide = Guide.query.get(session.get('user_id'))
+    if not guide or not guide.is_active:
+        return "Only active guides can remove projects.", 403
+
     project = Project.query.get_or_404(pid)
-    
+    if str(project.guide_id) != str(guide.id):
+        return "Unauthorized", 403
+
     try:
         # 2. REMOVE STUDENTS FIRST
         # This deletes all students associated with this project_id

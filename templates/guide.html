@@ -51,9 +51,13 @@
                 <td><a href="#" onclick="showStudents({{p.id}})" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
                 <td>{{p.submission_date}}</td>
                 <td style="text-align: right;">
+                    {% if guide.is_active %}
                     <a href="/delete_project/{{p.id}}" class="link-btn toggle" 
                        onclick="return confirm('Are you sure you want to remove this project?')" 
                        style="color: #e53e3e;">Remove</a>
+                    {% else %}
+                    <span style="color: #718096;">Inactive guides cannot remove projects</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
