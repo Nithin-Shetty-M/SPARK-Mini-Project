@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for, Response
-from flask_sqlalchemy import SQLAlchemy
+from flask_mongoengine import MongoEngine
 from datetime import datetime
 import os
 import pandas as pd
@@ -9,98 +9,70 @@ import csv
 
 app = Flask(__name__)
 app.secret_key = "college_secret_key"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for bulk students upload
+
+# --- MongoDB Configuration ---
+# Replace 'localhost' with your MongoDB Atlas URI if using the cloud
+app.config['MONGODB_SETTINGS'] = {
+    'db': 'college_db',
+    'host': 'localhost',
+    'port': 27017
+}
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-db = SQLAlchemy(app)
+db = MongoEngine(app)
 
-# --- Database Models ---
+# --- MongoDB Documents (Models) ---
 
-class Guide(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    department = db.Column(db.String(50))
-    is_active = db.Column(db.Boolean, default=True)
-    projects = db.relationship('Project', backref='guide', lazy=True)
+class Guide(db.Document):
+    name = db.StringField(max_length=100)
+    email = db.StringField(max_length=100, unique=True)
+    password = db.StringField(max_length=100)
+    department = db.StringField(max_length=50)
+    is_active = db.BooleanField(default=True)
 
-class Department(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+class Department(db.Document):
+    name = db.StringField(max_length=100, unique=True, required=True)
 
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
-    stored_name = db.Column(db.String(200))
-    submission_date = db.Column(db.DateTime, default=datetime.utcnow)
-    # student_reg_nos = db.Column(db.Text)
-    # course = db.Column(db.String(50))
-    # academic_year = db.Column(db.String(10))
-    batch = db.Column(db.String(20))
-    status = db.Column(db.String(20), default='Pending')
-    rejection_reason = db.Column(db.Text, nullable=True)
-    guide_id = db.Column(db.String(50), db.ForeignKey('guide.id'))
-    students= db.relationship('Student',backref='project',lazy=True)
+class Student(db.EmbeddedDocument):
+    roll_no = db.StringField(max_length=50)
+    academic_year = db.StringField(max_length=10)
+    name = db.StringField(max_length=100)
+    course = db.StringField(max_length=20)
+    section = db.StringField(max_length=5)
 
+class Project(db.Document):
+    name = db.StringField(max_length=200)
+    stored_name = db.StringField(max_length=200)
+    submission_date = db.DateTimeField(default=datetime.utcnow)
+    batch = db.StringField(max_length=20)
+    status = db.StringField(default='Pending')
+    rejection_reason = db.StringField()
+    guide = db.ReferenceField(Guide)
+    students = db.ListField(db.EmbeddedDocumentField(Student))
 
-class Student(db.Model):
-    roll_no = db.Column(db.String(50), primary_key=True)
-    academic_year= db.Column(db.String(10), primary_key=True)
-    name = db.Column(db.String(100))
-    course = db.Column(db.String(20))
-    section= db.Column(db.String(5))
-    project_id = db.Column(db.String(50), db.ForeignKey('project.id'))
-
-
-class Student_login(db.Model):
-    __tablename__ = 'Student_login'
-    roll_no = db.Column(db.String(50), primary_key=True)
-    name = db.Column(db.String(100))
-    course = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    password = db.Column(db.String(100))
-    batch = db.Column(db.String(20))
-
-    def __repr__(self):
-        return f'<Student {self.roll_no}: {self.name}>'
+class StudentLogin(db.Document):
+    meta = {'collection': 'student_login'}
+    roll_no = db.StringField(primary_key=True) # MongoDB uses this as _id
+    name = db.StringField(max_length=100)
+    course = db.StringField(max_length=100)
+    email = db.StringField(max_length=100)
+    password = db.StringField(max_length=100)
+    batch = db.StringField(max_length=20)
 
 # --- Routes ---
 
-# @app.before_request
-# def initrole():
-#     session['role'] = ''
-
 @app.route('/')
 def index():
-    guides = Guide.query.all()
-    projects = Project.query.all()
-    departments=Department.query.all()
-    return render_template('index.html',guides=guides,projects=projects,departments=departments)
+    guides = Guide.objects.all()
+    projects = Project.objects.all()
+    departments = Department.objects.all()
+    return render_template('index.html', guides=guides, projects=projects, departments=departments)
 
 @app.route('/logout')
 def logout():
     session.clear()
-    session['role'] = ''
-    guides = Guide.query.all()
-    projects = Project.query.all()
-    departments=Department.query.all()
-    return render_template('index.html',guides=guides,projects=projects,departments=departments)
+    return redirect(url_for('index'))
 
-@app.route('/student_info/dashboard')
-def student_info():
-    return render_template('student_info.html')
-
-@app.route('/guide_info/dashboard')
-def guide_info():
-    return render_template('guide_info.html')
-
-@app.route('/admin_info/dashboard')
-def admin_info():
-    return render_template('admin_info.html')
-
-# Basic Login Router
 @app.route('/login/<role>', methods=['GET', 'POST']) 
 def login(role):
     if request.method == 'POST':
@@ -112,252 +84,143 @@ def login(role):
             return redirect('/admin/dashboard')
         
         elif role == 'Guide':
-            g = Guide.query.filter_by(email=email, password=pw).first()
+            g = Guide.objects(email=email, password=pw).first()
             if g:
                 session['role'] = 'guide'
-                session['user_id'] = g.id
+                session['user_id'] = str(g.id)
                 return redirect('/guide/dashboard')
         
         elif role == 'Student':
-            s = Student_login.query.filter_by(email=email, password=pw).first()
+            s = StudentLogin.objects(email=email, password=pw).first()
             if s:
                 session['role'] = 'student'
-                session['student_rono']=s.roll_no
+                session['student_rono'] = s.roll_no
                 return redirect('/student/dashboard')
         
         return "Invalid Credentials"
-    return render_template('login.html',role=role)
+    return render_template('login.html', role=role)
 
 # --- Admin Functions ---
 
 @app.route('/admin/dashboard')
 def admin_dash():
-    if(session['role']!='admin'):
-        return "Your Session Has been Expired", 400
-    guides = Guide.query.all()
-    projects = Project.query.all()
-    students= Student_login.query.all()
-    departments = Department.query.order_by(Department.name).all()
+    if session.get('role') != 'admin':
+        return "Unauthorized", 401
+    guides = Guide.objects.all()
+    projects = Project.objects.all()
+    students = StudentLogin.objects.all()
+    departments = Department.objects.order_by('name')
     return render_template('admin.html', guides=guides, projects=projects, students=students, departments=departments)
-
-@app.route('/admin/add_guide')
-def add_guide():
-    departments = Department.query.order_by(Department.name).all()
-    return render_template('new_guide.html', departments=departments)
-
-@app.route('/admin/add_students')
-def add_students():
-    return render_template('bulk_students.html')
 
 @app.route('/admin/new_department', methods=['POST'])
 def new_department():
-    if session.get('role') != 'admin':
-        return "Your Session Has been Expired", 400
-
     name = request.form.get('name', '').strip()
-    if not name:
-        return "Department name is required", 400
-
-    existing = Department.query.filter(Department.name.ilike(name)).first()
-    if existing:
-        return redirect('/admin/dashboard')
-
-    dept = Department(name=name)
-    db.session.add(dept)
-    db.session.commit()
+    if name and not Department.objects(name__iexact=name).first():
+        Department(name=name).save()
     return redirect('/admin/dashboard')
 
 @app.route('/admin/new_guide', methods=['POST'])
 def new_guide():
-    new_g = Guide(name=request.form['name'], email=request.form['email'], 
-                  password=request.form['password'], department=request.form['dept'])
-    db.session.add(new_g)
-    db.session.commit()
+    Guide(
+        name=request.form['name'], 
+        email=request.form['email'], 
+        password=request.form['password'], 
+        department=request.form['dept']
+    ).save()
     return redirect('/admin/dashboard')
 
 @app.route('/admin/new_students', methods=['POST'])
 def upload_csv_file():
     file = request.files.get('file')
-    if not file or file.filename == '':
-        return "No file selected", 400
-
+    if not file: return "No file", 400
     try:
-        # 1. Read the CSV into a DataFrame
         df = pd.read_csv(file)
-
-        # 2. Use SQLAlchemy engine to write the data
-        # 'if_exists=append' works seamlessly with SQLAlchemy objects
-        df.to_sql(
-            'Student_login', 
-            con=db.engine, 
-            if_exists='append', 
-            index=False
-        )
-
+        # Convert dataframe to list of StudentLogin objects
+        records = [StudentLogin(**row) for row in df.to_dict('records')]
+        StudentLogin.objects.insert(records)
         return redirect('/admin/dashboard')
-        
-        # return f"Successfully inserted {len(df)} rows using SQLAlchemy."
-
     except Exception as e:
-        # pandas + sqlalchemy usually raises IntegrityError if PKs conflict
-        return f"An error occurred: {str(e)}", 500
+        return f"Error: {e}", 500
 
-@app.route('/admin/toggle_guide/<id>')
-def toggle_guide(id):
-    g = Guide.query.get(id)
-    g.is_active = not g.is_active
-    db.session.commit()
-    return redirect('/admin/dashboard')
+# --- Guide Functions ---
 
-@app.route('/admin/download_template')
-def download_template():
-    # Define the exact column headers your backend expects
-    column_headers = ['roll_no', 'name', 'course', 'email', 'password', 'batch']
-    
-    # Create an in-memory text stream
-    dest = io.StringIO()
-    writer = csv.writer(dest)
-    writer.writerow(column_headers)
-    
-    # Return the CSV as a downloadable file
-    output = dest.getvalue()
-    return Response(
-        output,
-        mimetype="text/csv",
-        headers={"Content-disposition": "attachment; filename=student_template.csv"}
-    )
-
-#--- Guide functions
 @app.route('/guide/dashboard')
 def guide_dash():
-    if(session['role']!='guide'):
-        return "Your Session Has been Expired", 400
-    g=session['user_id']
-    return render_template("guide.html",g=g, guide=Guide.query.get(g))
-
-@app.route('/guide/new_project/<g>')
-def new_project(g):
-    return render_template("new_project.html",g=g)
+    if session.get('role') != 'guide':
+        return "Unauthorized", 401
+    g_id = session['user_id']
+    return render_template("guide.html", g=g_id, guide=Guide.objects.get(id=g_id))
 
 @app.route('/guide/new_project/add/<G>', methods=['POST'])
 def upload_file(G):
-    g=Guide.query.filter_by(id=G).first()
-    name=request.form['name']
-    batch=request.form['batch']
+    guide = Guide.objects.get(id=G)
     file = request.files.get('file')
-    if file and file.filename != '':
-        original_name = file.filename
-        # Generate unique filename using UUID
-        extension = os.path.splitext(original_name)[1]
-        unique_name = f"{uuid.uuid4()}{extension}"
-        
-        # Save physical file
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-        file.save(filepath)
-        
-        # Save record to DB via ORM
-        new_file = Project(name=name, stored_name=unique_name, batch=batch, guide_id=g.id)
-        db.session.add(new_file)
-        db.session.flush()
-    #     db.session.commit()
-        
-    # return redirect(url_for('index'))
-        p = Project.query.filter_by(stored_name=unique_name, guide_id=g.id).first()
-        student_count = 0
-        for i in range(1, 8):
-            roll = request.form.get(f'roll_no_{i}')
-            name = request.form.get(f'name_{i}')
-            section = request.form.get(f'section_{i}')
-            academic_year=request.form.get('academic_year')
-            course=request.form.get(f'course_{i}')
+    if not file: return "File missing", 400
 
-            # Only create an entry if Roll Number is provided
-            if roll and roll.strip():
-                new_student = Student(
-                    roll_no=roll,
-                    academic_year=academic_year,
-                    name=name,
-                    course=course,
-                    section=section,
-                    project_id=p.id  # Link to the project we just created
-                )
-                db.session.add(new_student)
-                student_count += 1
+    unique_name = f"{uuid.uuid4()}{os.path.splitext(file.filename)[1]}"
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_name))
+    
+    # Create Project Document
+    new_project = Project(
+        name=request.form['name'],
+        stored_name=unique_name,
+        batch=request.form['batch'],
+        guide=guide
+    )
 
-        # 4. Final Validation & Commit
-        if student_count < 3:
-            db.session.rollback()
-            return "Error: You must provide at least 3 students."
+    # Collect Students
+    student_list = []
+    for i in range(1, 8):
+        roll = request.form.get(f'roll_no_{i}')
+        if roll and roll.strip():
+            student_list.append(Student(
+                roll_no=roll,
+                name=request.form.get(f'name_{i}'),
+                section=request.form.get(f'section_{i}'),
+                academic_year=request.form.get('academic_year'),
+                course=request.form.get(f'course_{i}')
+            ))
 
-        db.session.commit()
-        return redirect('/guide/dashboard')
+    if len(student_list) < 3:
+        return "Error: At least 3 students required", 400
 
-    return "File missing", 400
+    new_project.students = student_list
+    new_project.save()
+    return redirect('/guide/dashboard')
 
-@app.route('/delete_project/<int:pid>')
+@app.route('/delete_project/<pid>')
 def delete_project(pid):
-    if session.get('role') != 'guide':
-        return "Your Session Has been Expired", 400
-
-    guide = Guide.query.get(session.get('user_id'))
-    if not guide or not guide.is_active:
-        return "Only active guides can remove projects.", 403
-
-    project = Project.query.get_or_404(pid)
-    if str(project.guide_id) != str(guide.id):
-        return "Unauthorized", 403
-
-    try:
-        # 2. REMOVE STUDENTS FIRST
-        # This deletes all students associated with this project_id
-        Student.query.filter_by(project_id=pid).delete()
-        
-        # 3. REMOVE THE PHYSICAL FILE
-        if project.stored_name:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.stored_name)
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        
-        # 4. REMOVE THE PROJECT RECORD
-        db.session.delete(project)
-        
-        # Commit all changes (Students + Project) as one transaction
-        db.session.commit()
-        
-    except Exception as e:
-        db.session.rollback()
-        return f"An error occurred: {str(e)}", 500
-        
+    project = Project.objects.get_or_404(id=pid)
+    # Remove physical file
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.stored_name)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    project.delete()
     return redirect("/guide/dashboard")
-
-
 
 # --- Student Functions ---
 
 @app.route('/student/dashboard')
 def student_dash():
-    if(session['role']!='student'):
-        return "Your Session Has been Expired", 400
-    s=session['student_rono']
-    student=Student_login.query.get(s)
-    guides=Guide.query.all()
+    if session.get('role') != 'student':
+        return "Unauthorized", 401
+    
+    student = StudentLogin.objects.get(roll_no=session['student_rono'])
     search = request.args.get('psearch')
     dept = request.args.get('pdept')
-    query = Project.query
     
-    if search: query = query.filter(Project.name.contains(search))
-    if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
+    query_params = {}
+    if search: query_params['name__icontains'] = search
     
-    return render_template('student.html', projects=query.all(),guides=guides,student=student)
+    projects = Project.objects(**query_params)
+    
+    # Manual filter for department since it's in a referenced Guide document
+    if dept:
+        projects = [p for p in projects if dept.lower() in p.guide.department.lower()]
 
-@app.route('/download/<filename>')
-def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename) 
+    return render_template('student.html', projects=projects, guides=Guide.objects.all(), student=student)
 
-# Main loop
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
