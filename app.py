@@ -1,17 +1,36 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for, Response
-from flask_mongoengine import MongoEngine
-from datetime import datetime
+import flask.json
 import os
 import pandas as pd
 import uuid
 import io
 import csv
+from datetime import datetime
+
+# --- FLASK 3.0+ COMPATIBILITY PATCH START ---
+# This fixes: "ImportError: cannot import name 'JSONEncoder' from 'flask.json'"
+# and "AttributeError: 'Flask' object has no attribute 'json_encoder'"
+try:
+    from flask.json import JSONEncoder
+except ImportError:
+    import json
+    class JSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if hasattr(obj, '__iter__'):
+                return list(obj)
+            return super().default(obj)
+    flask.json.JSONEncoder = JSONEncoder
+# --- FLASK 3.0+ COMPATIBILITY PATCH END ---
+
+from flask_mongoengine import MongoEngine
 
 app = Flask(__name__)
 app.secret_key = "college_secret_key"
 
+# Apply the patch to the app instance
+app.json_encoder = JSONEncoder
+
 # --- MongoDB Configuration ---
-# Replace 'localhost' with your MongoDB Atlas URI if using the cloud
 app.config['MONGODB_SETTINGS'] = {
     'db': 'college_db',
     'host': 'localhost',
@@ -52,7 +71,7 @@ class Project(db.Document):
 
 class StudentLogin(db.Document):
     meta = {'collection': 'student_login'}
-    roll_no = db.StringField(primary_key=True) # MongoDB uses this as _id
+    roll_no = db.StringField(primary_key=True) 
     name = db.StringField(max_length=100)
     course = db.StringField(max_length=100)
     email = db.StringField(max_length=100)
@@ -135,21 +154,74 @@ def upload_csv_file():
     if not file: return "No file", 400
     try:
         df = pd.read_csv(file)
-        # Convert dataframe to list of StudentLogin objects
+        # MongoDB Insert
         records = [StudentLogin(**row) for row in df.to_dict('records')]
         StudentLogin.objects.insert(records)
         return redirect('/admin/dashboard')
     except Exception as e:
         return f"Error: {e}", 500
 
+@app.route('/admin/add_guide')
+def add_guide():
+    if session.get('role') != 'admin':
+        return "Unauthorized", 401
+    departments = Department.objects.order_by('name')
+    return render_template('new_guide.html', departments=departments)
+
+@app.route('/admin/add_students')
+def add_students():
+    if session.get('role') != 'admin':
+        return "Unauthorized", 401
+    return render_template('bulk_students.html')
+
+@app.route('/admin/toggle_guide/<id>')
+def toggle_guide(id):
+    if session.get('role') != 'admin':
+        return "Unauthorized", 401
+    g = Guide.objects.get_or_404(id=id)
+    g.is_active = not g.is_active
+    g.save()
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/download_template')
+def download_template():
+    if session.get('role') != 'admin':
+        return "Unauthorized", 401
+    # Define the exact column headers the MongoDB StudentLogin model expects
+    column_headers = ['roll_no', 'name', 'course', 'email', 'password', 'batch']
+    
+    dest = io.StringIO()
+    writer = csv.writer(dest)
+    writer.writerow(column_headers)
+    
+    output = dest.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=student_template.csv"}
+    )
+
 # --- Guide Functions ---
+
+# @app.route('/guide/dashboard')
+# def guide_dash():
+#     if session.get('role') != 'guide':
+#         return "Unauthorized", 401
+#     g_id = session['user_id']
+#     return render_template("guide.html", g=g_id, guide=Guide.objects.get(id=g_id))
 
 @app.route('/guide/dashboard')
 def guide_dash():
     if session.get('role') != 'guide':
         return "Unauthorized", 401
+    
     g_id = session['user_id']
-    return render_template("guide.html", g=g_id, guide=Guide.objects.get(id=g_id))
+    current_guide = Guide.objects.get(id=g_id)
+    
+    # NEW: Fetch projects belonging to THIS guide specifically
+    guide_projects = Project.objects(guide=current_guide) 
+    
+    return render_template("guide.html", g=g_id, guide=current_guide, projects=guide_projects)
 
 @app.route('/guide/new_project/add/<G>', methods=['POST'])
 def upload_file(G):
@@ -160,7 +232,6 @@ def upload_file(G):
     unique_name = f"{uuid.uuid4()}{os.path.splitext(file.filename)[1]}"
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_name))
     
-    # Create Project Document
     new_project = Project(
         name=request.form['name'],
         stored_name=unique_name,
@@ -168,7 +239,6 @@ def upload_file(G):
         guide=guide
     )
 
-    # Collect Students
     student_list = []
     for i in range(1, 8):
         roll = request.form.get(f'roll_no_{i}')
@@ -191,12 +261,17 @@ def upload_file(G):
 @app.route('/delete_project/<pid>')
 def delete_project(pid):
     project = Project.objects.get_or_404(id=pid)
-    # Remove physical file
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], project.stored_name)
     if os.path.exists(file_path):
         os.remove(file_path)
     project.delete()
     return redirect("/guide/dashboard")
+
+@app.route('/guide/new_project/<g>')
+def new_project(g):
+    if session.get('role') != 'guide':
+        return "Unauthorized", 401
+    return render_template("new_project.html", g=g)
 
 # --- Student Functions ---
 
@@ -214,11 +289,18 @@ def student_dash():
     
     projects = Project.objects(**query_params)
     
-    # Manual filter for department since it's in a referenced Guide document
     if dept:
         projects = [p for p in projects if dept.lower() in p.guide.department.lower()]
 
-    return render_template('student.html', projects=projects, guides=Guide.objects.all(), student=student)
+    guides = Guide.objects.all()
+    for guide in guides:
+        guide.project_count = Project.objects(guide=guide).count()
+
+    return render_template('student.html', projects=projects, guides=guides, student=student)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename) 
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):

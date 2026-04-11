@@ -46,7 +46,7 @@
                 <td><strong>{{p.name}}</strong></td>
                 <td>{{p.guide.name}}</td>
                 <td>{{p.guide.department}}</td>
-                <td><a href="#" onclick="showStudents({{ p.id }}); return false;" style="color: #3b82f6; text-decoration: none;">{{ p.students|length }}</a></td>
+                <td><a href="#" onclick="showStudents('{{ p.id }}'); return false;" style="color: #3b82f6; text-decoration: none;">{{ p.students|length }}</a></td>
                 <td>{{p.submission_date}}</td>
                 <td><a href="/download/{{p.stored_name}}" class="link-btn">View/Download</a></td>
             </tr>
@@ -76,7 +76,7 @@
                 <td>{{guide.name}}</td>
                 <td>{{guide.department}}</td>
                 <td><span class="status-pill {{ 'active' if guide.is_active else 'inactive' }}">{{ "Active" if guide.is_active else "Inactive" }}</span></td>
-                <td>{{guide.projects|length}}</td>
+                <td>{{ guide.project_count }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -100,11 +100,11 @@
 <script>
     var studentsData = {
     {% for p in projects %}
-        {{ p.id }}: [
+        "{{ p.id }}": [
             {% for s in p.students %}
-                {name: "{{ s.name }}", roll_no: "{{ s.roll_no }}", course: "{{ s.course }}", section: "{{ s.section }}", academic_year: "{{ s.academic_year }}"},
+                {name: "{{ s.name }}", roll_no: "{{ s.roll_no }}", course: "{{ s.course }}", section: "{{ s.section }}", academic_year: "{{ s.academic_year }}"}{{ "," if not loop.last else "" }}
             {% endfor %}
-        ],
+        ]{{ "," if not loop.last else "" }}
     {% endfor %}
     };
 

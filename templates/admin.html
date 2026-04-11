@@ -71,7 +71,7 @@
                 <td>{{p.name}}</td>
                 <td>{{p.guide.name}}</td>
                 <td>{{p.guide.department}}</td>
-                <td><a href="#" onclick="showStudents({{p.id}}); return false;" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
+                <td><a href="#" onclick="showStudents('{{p.id}}'); return false;" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
                 <td>{{p.submission_date}}</td>
                 <td><a href="/download/{{p.stored_name}}" class="link-btn">Download</a></td>
             </tr>
@@ -209,11 +209,11 @@
 
     var studentsData = {
     {% for p in projects %}
-        {{ p.id }}: [
+        "{{ p.id }}": [
             {% for s in p.students %}
-                {name: "{{ s.name }}", roll_no: "{{ s.roll_no }}", course: "{{ s.course }}", section: "{{ s.section }}", academic_year: "{{ s.academic_year }}"},
+                {name: "{{ s.name }}", roll_no: "{{ s.roll_no }}", course: "{{ s.course }}", section: "{{ s.section }}", academic_year: "{{ s.academic_year }}"}{{ "," if not loop.last else "" }}
             {% endfor %}
-        ],
+        ]{{ "," if not loop.last else "" }}
     {% endfor %}
     };
 

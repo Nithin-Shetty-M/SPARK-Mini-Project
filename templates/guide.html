@@ -44,11 +44,11 @@
             </tr>
         </thead>
         <tbody>
-            {% for p in guide.projects %}
+            {% for p in projects %}
             <tr>
                 <td>{{p.id}}</td>
                 <td><strong>{{p.name}}</strong></td>
-                <td><a href="#" onclick="showStudents({{p.id}})" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
+                <td><a href="#" onclick="showStudents('{{p.id}}'); return false;" style="color: #3b82f6; text-decoration: none;">{{p.students|length}}</a></td>
                 <td>{{p.submission_date}}</td>
                 <td style="text-align: right;">
                     {% if guide.is_active %}
@@ -61,7 +61,7 @@
                 </td>
             </tr>
             {% endfor %}
-            {% if not guide.projects %}
+            {% if not projects %}
             <tr>
                 <td colspan="5" style="text-align: center; color: #a0aec0; padding: 40px;">No projects uploaded yet.</td>
             </tr>
@@ -91,12 +91,12 @@
 
 <script>
     var studentsData = {
-    {% for p in guide.projects %}
-    {{p.id}}: [
+    {% for p in projects %}
+    "{{p.id}}": [
     {% for s in p.students %}
-    {name: "{{s.name}}", roll_no: "{{s.roll_no}}", course: "{{s.course}}", section: "{{s.section}}", academic_year: "{{s.academic_year}}"},
+    {name: "{{s.name}}", roll_no: "{{s.roll_no}}", course: "{{s.course}}", section: "{{s.section}}", academic_year: "{{s.academic_year}}"}{{ "," if not loop.last else "" }}
     {% endfor %}
-    ],
+    ]{{ "," if not loop.last else "" }}
     {% endfor %}
     };
 
