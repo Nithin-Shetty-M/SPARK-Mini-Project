@@ -1,30 +1,44 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 from datetime import datetime
 import os
 import pandas as pd
 import uuid
 import io
 import csv
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "college_secret_key"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.secret_key = os.getenv('SECRET_KEY', 'college_secret_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #for bulk students upload
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
 
 # --- Database Models ---
 
 class Guide(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    department = db.Column(db.String(50))
+    email = db.Column(db.String(100), unique=True, index=True)
+    password = db.Column(db.String(255))  # Increased length for hashed passwords
+    department = db.Column(db.String(50), index=True)  # Index for search optimization
     is_active = db.Column(db.Boolean, default=True)
     projects = db.relationship('Project', backref='guide', lazy=True)
+    
+    def set_password(self, password):
+        """Hash and set the password"""
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    def check_password(self, password):
+        """Check if provided password matches the hashed password"""
+        return bcrypt.check_password_hash(self.password, password)
 
 class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,7 +46,7 @@ class Department(db.Model):
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(200), index=True)  # Index for search optimization
     stored_name = db.Column(db.String(200))
     submission_date = db.Column(db.DateTime, default=datetime.utcnow)
     # student_reg_nos = db.Column(db.Text)
@@ -41,30 +55,38 @@ class Project(db.Model):
     batch = db.Column(db.String(20))
     status = db.Column(db.String(20), default='Pending')
     rejection_reason = db.Column(db.Text, nullable=True)
-    guide_id = db.Column(db.String(50), db.ForeignKey('guide.id'))
+    guide_id = db.Column(db.String(50), db.ForeignKey('guide.id'), index=True)  # Index for joins
     students= db.relationship('Student',backref='project',lazy=True)
 
 
 class Student(db.Model):
-    roll_no = db.Column(db.String(50), primary_key=True)
+    roll_no = db.Column(db.String(50), primary_key=True, index=True)  # Index for lookups
     academic_year= db.Column(db.String(10), primary_key=True)
-    name = db.Column(db.String(100))
+    name = db.Column(db.String(100), index=True)  # Index for search optimization
     course = db.Column(db.String(20))
     section= db.Column(db.String(5))
-    project_id = db.Column(db.String(50), db.ForeignKey('project.id'))
+    project_id = db.Column(db.String(50), db.ForeignKey('project.id'), index=True)  # Index for joins
 
 
 class Student_login(db.Model):
     __tablename__ = 'Student_login'
-    roll_no = db.Column(db.String(50), primary_key=True)
-    name = db.Column(db.String(100))
+    roll_no = db.Column(db.String(50), primary_key=True, index=True)
+    name = db.Column(db.String(100), index=True)  # Index for search optimization
     course = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    password = db.Column(db.String(100))
-    batch = db.Column(db.String(20))
+    email = db.Column(db.String(100), unique=True, index=True)
+    password = db.Column(db.String(255))  # Increased length for hashed passwords
+    batch = db.Column(db.String(20), index=True)  # Index for batch queries
 
     def __repr__(self):
         return f'<Student {self.roll_no}: {self.name}>'
+    
+    def set_password(self, password):
+        """Hash and set the password"""
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    def check_password(self, password):
+        """Check if provided password matches the hashed password"""
+        return bcrypt.check_password_hash(self.password, password)
 
 # --- Routes ---
 
@@ -107,20 +129,23 @@ def login(role):
         email = request.form.get('email')
         pw = request.form.get('password')
         
-        if role == 'Admin' and email == 'admin@gmail.com' and pw == 'admin123':
-            session['role'] = 'admin'
-            return redirect('/admin/dashboard')
+        if role == 'Admin':
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@gmail.com')
+            admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
+            if email == admin_email and pw == admin_password:
+                session['role'] = 'admin'
+                return redirect('/admin/dashboard')
         
         elif role == 'Guide':
-            g = Guide.query.filter_by(email=email, password=pw).first()
-            if g:
+            g = Guide.query.filter_by(email=email).first()
+            if g and g.check_password(pw):
                 session['role'] = 'guide'
                 session['user_id'] = g.id
                 return redirect('/guide/dashboard')
         
         elif role == 'Student':
-            s = Student_login.query.filter_by(email=email, password=pw).first()
-            if s:
+            s = Student_login.query.filter_by(email=email).first()
+            if s and s.check_password(pw):
                 session['role'] = 'student'
                 session['student_rono']=s.roll_no
                 return redirect('/student/dashboard')
@@ -170,7 +195,8 @@ def new_department():
 @app.route('/admin/new_guide', methods=['POST'])
 def new_guide():
     new_g = Guide(name=request.form['name'], email=request.form['email'], 
-                  password=request.form['password'], department=request.form['dept'])
+                  department=request.form['dept'])
+    new_g.set_password(request.form['password'])
     db.session.add(new_g)
     db.session.commit()
     return redirect('/admin/dashboard')
@@ -184,8 +210,12 @@ def upload_csv_file():
     try:
         # 1. Read the CSV into a DataFrame
         df = pd.read_csv(file)
+        
+        # 2. Hash passwords before insertion
+        if 'password' in df.columns:
+            df['password'] = df['password'].apply(lambda x: bcrypt.generate_password_hash(str(x)).decode('utf-8'))
 
-        # 2. Use SQLAlchemy engine to write the data
+        # 3. Use SQLAlchemy engine to write the data
         # 'if_exists=append' works seamlessly with SQLAlchemy objects
         df.to_sql(
             'Student_login', 
@@ -341,12 +371,18 @@ def student_dash():
     s=session['student_rono']
     student=Student_login.query.get(s)
     guides=Guide.query.all()
-    search = request.args.get('psearch')
-    dept = request.args.get('pdept')
+    search = request.args.get('search')
     query = Project.query
     
-    if search: query = query.filter(Project.name.contains(search))
-    if dept: query = query.join(Guide).filter(Guide.department.contains(dept))
+    if search:
+        # Search across multiple name columns: project name, department name, guide name
+        query = query.join(Guide).filter(
+            db.or_(
+                Project.name.contains(search),
+                Guide.department.contains(search),
+                Guide.name.contains(search)
+            )
+        )
     
     return render_template('student.html', projects=query.all(),guides=guides,student=student)
 
